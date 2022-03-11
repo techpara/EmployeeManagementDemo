@@ -1,0 +1,115 @@
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<a href="/Department/details" class="btn btn-success">Create Department</a>
+<table class="table table-bordered" id="DepartmentTable">
+    <thead>
+        <tr>
+            <th>
+                Actions
+            </th>
+             <th>
+                Name
+            </th>
+            <th>
+                Description
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr style="display: none">
+            <td colspan="3"></td>
+        </tr>
+    </tbody>
+</table>
+<script>
+    $(document).ready(function () {
+       loadDataTable();
+    });
+
+    
+        function DeleteDepartment(id) {
+            $.ajax({
+                type: "DELETE",
+                 url: "/api/Department/deleteDepartment/" + id,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (data) {
+                      alert("Department deleted.");
+                      window.location.reload();
+                },
+                error: function (response) {
+                    console.log(response);
+                }
+            });
+        }
+
+     function loadDataTable() {
+            $('#DepartmentTable').DataTable({
+                "ajax":
+                {
+                    "url": "/api/Department/list",
+                    "contentType": "application/json",
+                    "type": "GET",
+                    "dataType": "JSON",
+                    "data": function (d) {
+                        return d;
+                    },
+                    "dataSrc": function (json) {
+                        json.draw = json
+                        json.data = json;
+                        return json;
+                    }
+                },
+                "processing": true,
+                "order": [[1, "desc"]],
+                "pagingType": "full_numbers",
+                "destroy": true,
+                "stateSave": false,
+                "serverSide": true,
+                searching: false,
+                info: true,
+                lengthChange: true,
+                "language": {
+                    "emptyTable": "No record(s) available."
+                },
+                drawCallback: function () {
+                    var pagination = $(this).closest('.dataTables_wrapper').find('.dataTables_paginate');
+                    pagination.toggle(this.api().page.info().pages >= 1);
+
+                    var pageInfo = $(this).closest('.dataTables_wrapper').find('.dataTables_info');
+                    pageInfo.toggle(this.api().page.info().pages >= 1);
+
+                    var tableLength = $(this).closest('.dataTables_wrapper').find('.dataTables_length');
+                    tableLength.toggle(this.api().page.info().pages >= 1);
+
+                    if (this.api().page.info().pages >= 1) {
+                        $('#ddlPages').next(".select2-container").show();
+                        loadPageDropdown(this.api().page.info());
+                    }
+                    else {
+                        $('#ddlPages').next(".select2-container").hide();
+                    }
+                },
+                "columns": [
+                    {
+                        "class": "",
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            console.log(row);
+                            var actionHTML = `<div class="table-action">`;
+                            actionHTML += `<a class="action me-2" href="/Department/details/${row.id}" >Edit</a>`;
+                            actionHTML += `&nbsp;<a href="javascript:void(0)" class="action me-2" onclick="DeleteDepartment('${row.id}')" >Delete</a>`;
+                            actionHTML += `</div>`;
+                            return actionHTML;
+                        }
+                    },
+                    { 'data': 'name', "orderable": false },
+                    { 'data': 'desciption', "orderable": false }
+                ]
+            });
+        }
+</script>

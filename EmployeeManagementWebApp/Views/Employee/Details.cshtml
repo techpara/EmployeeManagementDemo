@@ -1,0 +1,158 @@
+@model EmployeeManagementWebApp.Models.Employees
+
+@{
+    ViewData["Title"] = "Details";
+    var employeeId = ViewContext.RouteData.Values["id"] ?? "0";
+}
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+<h1>Add/Edit</h1>
+
+<div class="container-fluid">
+    <div class="form-group">
+        <label for="txtFirstName">First Name</label>
+        <input type="text" class="form-control" id="txtFirstName" placeholder="First Name" maxlength="50">
+    </div>
+    <div class="form-group">
+        <label for="txtLastName">Last Name</label>
+        <input type="text" class="form-control" id="txtLastName" placeholder="Last Name" maxlength="50">
+    </div>
+    <div class="form-group">
+        <label for="txtPhoneNumber">Phone Number</label>
+        <input type="tel" class="form-control" id="txtPhoneNumber" placeholder="Phone Number" maxlength="20">
+    </div>
+    <div class="form-group">
+        <label for="txtEmail">Email</label>
+        <input type="email" class="form-control" id="txtEmail" placeholder="Email" maxlength="100">
+    </div>
+    <div class="form-group">
+        <label for="txtBio">Bio</label>
+        <input type="text" class="form-control" id="txtBio" placeholder="Bio" maxlength="200">
+    </div>
+    <div class="form-group">
+        <label for="txtBio">Salary</label>
+        <input type="text" class="form-control" id="txtSalary" placeholder="Salary" maxlength="200">
+    </div>
+    <div class="form-group">
+        <label for="ddlDepartment">Department</label>
+        <select id="ddlDepartment" class="form-control">
+            <option>Select</option>
+        </select>
+    </div>
+    <div class="custom-file">
+        <input type="file" class="custom-file-input" id="employeePhotoUpload" required>
+        <label class="custom-file-label" for="validatedCustomFile">Choose file...</label>
+        <div class="invalid-feedback">Example invalid custom file feedback</div>
+    </div>
+    <br />
+    <input type="hidden" id="hdnEmployeeId" />
+    <button id="btnSubmit" type="submit" class="btn btn-primary" onclick="saveEmployeeNew()">Submit</button>
+</div>
+
+<script>
+
+    $(document).ready(function() {
+             loadDepartments();
+             if (@employeeId > 0) {
+                 loadEmployeeDetails();
+             }
+    });
+
+
+             function saveEmployeeNew() {
+                 var employeePhotoUpload = $('#employeePhotoUpload').prop("files");
+                 console.log(employeePhotoUpload);
+                 var formData = new FormData();
+                 formData.append("ID",  @employeeId);
+                 formData.append("FirstName",  $('#txtFirstName').val());
+                 formData.append("LastName",  $('#txtLastName').val());
+                 formData.append("PhoneNumber",  $('#txtPhoneNumber').val());
+                 formData.append("Email",  $('#txtEmail').val());
+                 formData.append("Bio",  $('#txtBio').val());
+                 formData.append("Salary",  $('#txtSalary').val());
+                 formData.append("Photo",  "1.jpg");
+                 formData.append("DepartmentId",  parseInt($('#ddlDepartment').val()));
+                 formData.append("EmployeeImage", employeePhotoUpload[0]);
+
+                 var url = "";
+                 var method = "";
+                 if (@employeeId > 0) {
+                     url = "/api/employee/updateEmployee/@employeeId";
+                     method = "PUT";
+                 } else {
+                     url = "/api/employee/createEmployee";
+                     method = "POST";
+                 }
+
+                $.ajax({
+                         type: method,
+                         url: url,
+                          data: formData,
+		                cache: false,
+		                contentType: false,
+		                processData: false,
+                     })
+                     .done(function(data) {
+                         alert("Employee saved.");
+                          window.location.href="../../employee/index"
+                     })
+                     .fail(function(xhr) {
+                         console.log('An error occurred during adding or updating emp.', xhr);
+                     });
+             }
+
+             function loadDepartments() {
+                 $.ajax({
+                     type: "GET",
+                     url: "/api/department/list",
+                     contentType: "application/json; charset=utf-8",
+                     dataType: "json",
+                     beforeSend: function() {
+                         $('#ddlDepartment').find('option').remove();
+                         var defaultoption = new Option('Select Department...', '', true, false);
+                         $('#ddlDepartment').append(defaultoption)
+                     },
+                     success: function(data) {
+                         console.log(data);
+                         if (data) {
+                             $.each(data, function(data, value) {
+                                 var newOption = new Option(value.name, value.id, false, false);
+                                 $('#ddlDepartment').append(newOption)
+                             })
+                         }
+                     },
+                     error: function(response) {
+                         console.log(response);
+                     }
+                 });
+             }
+
+             function loadEmployeeDetails() {
+                 $.ajax({
+                     type: "GET",
+                     url: "/api/employee/details/@employeeId",
+                     contentType: "application/json; charset=utf-8",
+                     dataType: "json",
+                     success: function(data) {
+                         console.log(data);
+                         if (data) {
+                             setTimeout(function() {
+                                 $('#hdnEmployeeId').val(data.ID);
+                                 $('#txtFirstName').val(data.firstName);
+                                 $('#txtLastName').val(data.lastName);
+                                 $('#txtPhoneNumber').val(data.phoneNumber);
+                                 $('#txtEmail').val(data.email);
+                                 $('#txtBio').val(data.bio);
+                                 $('#txtSalary').val(data.salary);
+                                 $('#ddlDepartment').val(data.departmentID);
+                             }, 200);
+
+                         }
+                     },
+                     error: function(response) {
+                         console.log(response);
+                     }
+                 });
+             }
+</script>

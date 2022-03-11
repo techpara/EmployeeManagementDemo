@@ -1,0 +1,142 @@
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<a href="/employee/details" class="btn btn-success">Create Employee</a>
+<table class="table table-bordered" id="employeeTable">
+    <thead>
+        <tr>
+            <th>
+                Actions
+            </th>
+             <th>
+                Photo
+            </th>
+            <th>
+                FirstName
+            </th>
+            <th>
+                LastName
+            </th>
+            <th>
+                Email
+            </th>
+            <th>
+                PhoneNumber
+            </th>
+            <th>
+                Salary
+            </th>
+
+        </tr>
+    </thead>
+    <tbody>
+        <tr style="display: none">
+            <td colspan="6"></td>
+        </tr>
+    </tbody>
+</table>
+<script>
+    $(document).ready(function () {
+       loadDataTable();
+    });
+
+    
+        function DeleteEmployee(id) {
+            console.log(id);
+            $.ajax({
+                type: "DELETE",
+                 url: "/api/employee/deleteEmployee/" + id,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (data) {
+                      alert("Employee deleted.");
+                      window.location.reload();
+                },
+                error: function (response) {
+                    console.log(response);
+                }
+            });
+        }
+
+     function loadDataTable() {
+            $('#employeeTable').DataTable({
+                "ajax":
+                {
+                    "url": "/api/employee/list",
+                    "contentType": "application/json",
+                    "type": "GET",
+                    "dataType": "JSON",
+                    "data": function (d) {
+                        return d;
+                    },
+                    "dataSrc": function (json) {
+                        json.draw = json
+                        json.data = json;
+                        return json;
+                    }
+                },
+                "processing": true,
+                "order": [[1, "desc"]],
+                "pagingType": "full_numbers",
+                "destroy": true,
+                "stateSave": false,
+                "serverSide": true,
+                searching: false,
+                info: true,
+                lengthChange: true,
+                "language": {
+                    "emptyTable": "No record(s) available."
+                },
+                drawCallback: function () {
+                    var pagination = $(this).closest('.dataTables_wrapper').find('.dataTables_paginate');
+                    pagination.toggle(this.api().page.info().pages >= 1);
+
+                    var pageInfo = $(this).closest('.dataTables_wrapper').find('.dataTables_info');
+                    pageInfo.toggle(this.api().page.info().pages >= 1);
+
+                    var tableLength = $(this).closest('.dataTables_wrapper').find('.dataTables_length');
+                    tableLength.toggle(this.api().page.info().pages >= 1);
+
+                    if (this.api().page.info().pages >= 1) {
+                        $('#ddlPages').next(".select2-container").show();
+                        loadPageDropdown(this.api().page.info());
+                    }
+                    else {
+                        $('#ddlPages').next(".select2-container").hide();
+                    }
+                },
+                "columns": [
+                    {
+                        "class": "",
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            console.log(row);
+                            var actionHTML = `<div class="table-action">`;
+                            actionHTML += `<a class="action me-2" href="/employee/details/${row.id}" >Edit</a>`;
+                            actionHTML += `&nbsp;<a href="javascript:void(0)" class="action me-2" onclick="DeleteEmployee('${row.id}')" >Delete</a>`;
+                            actionHTML += `</div>`;
+                            return actionHTML;
+                        }
+                    },
+                    {
+                        "class": "",
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            var actionHTML = "";
+                            actionHTML += `<img width="50" height="50" src="../EmployeePhoto/${row.photo}" />`;
+                            return actionHTML;
+                        }
+                    },
+                    { 'data': 'firstName', "orderable": false },
+                    { 'data': 'lastName', "orderable": false },
+                    { 'data': 'email', "orderable": false },
+                    { 'data': 'phoneNumber', "orderable": false },
+                    { 'data': 'salary', "orderable": false }
+                ]
+            });
+        }
+</script>

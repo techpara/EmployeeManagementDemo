@@ -1,0 +1,88 @@
+@{
+    ViewData["Title"] = "Add/Edit Department";
+    var DepartmentId = ViewContext.RouteData.Values["id"] ?? "0";
+}
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+<h1>Add/Edit Department</h1>
+
+<div class="container-fluid">
+    <div class="form-group">
+        <label for="txtName">Name</label>
+        <input type="text" class="form-control" id="txtName" placeholder="Name" maxlength="50">
+    </div>
+    <div class="form-group">
+        <label for="txtDesciption">Desciption</label>
+        <input type="text" class="form-control" id="txtDesciption" placeholder="Desciption" maxlength="50">
+    </div>
+    <br />
+    <input type="hidden" id="hdnDepartmentId" />
+    <button id="btnSubmit" type="submit" class="btn btn-primary" onclick="saveDepartmentNew()">Submit</button>
+</div>
+
+<script>
+
+    $(document).ready(function() {
+        if (@DepartmentId > 0) {
+            loadDepartmentDetails();
+        }
+    });
+
+    function saveDepartmentNew() {
+       
+        var formData = new FormData();
+        formData.append("ID",  @DepartmentId);
+        formData.append("Name",  $('#txtName').val());
+        formData.append("Desciption",  $('#txtDesciption').val());
+
+        var url = "";
+        var method = "";
+        if (@DepartmentId > 0) {
+            url = "/api/department/updateDepartment/@DepartmentId";
+            method = "PUT";
+        } else {
+            url = "/api/Department/createDepartment";
+            method = "POST";
+        }
+
+       $.ajax({
+            type: method,
+            url: url,
+            data: formData,
+	        cache: false,
+	        contentType: false,
+	        processData: false,
+       })
+       .done(function(data) {
+           alert("Department saved.");
+           window.location.href="../../department/index"
+       })
+       .fail(function(xhr) {
+           console.log('An error occurred during adding or updating department.', xhr);
+       });
+    }
+
+    function loadDepartmentDetails() {
+        $.ajax({
+            type: "GET",
+            url: "/api/department/details/@DepartmentId",
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function(data) {
+                console.log(data);
+                if (data) {
+                    setTimeout(function() {
+                        $('#hdnDepartmentId').val(data.ID);
+                        $('#txtName').val(data.name);
+                        $('#txtDesciption').val(data.desciption);
+                    }, 200);
+
+                }
+            },
+            error: function(response) {
+                console.log(response);
+            }
+        });
+    }
+</script>
